@@ -11,15 +11,14 @@ import (
 
 const macrons = `
 a	e--------	a	a_
-aaron	n-s---mn-	Aaron	A^a^ro_n
 a	r--------	ab	a_
 ab	r--------	ab	ab
 abs	r--------	ab	abs
 aps	r--------	ab	aps
-aba	n-s---mb-	Aba	Aba_
-aba	n-s---mn-	Aba	aba
-aba	n-s---mv-	Aba	aba
-abas	n-p---ma-	Aba	Aba_s
+ac	c--------	atque	ac
+ad	r--------	ad	ad
+addo	v1spia---	addo	addo_
+advenio	v1spia---	advenio	adve^nio_
 `
 
 func extractAccented(forms []bank.WordForm) []string {
@@ -44,7 +43,7 @@ func TestLookup(t *testing.T) {
 		query    string
 		expected []string
 	}{
-		{"aaron", []string{"A^a^ro_n"}},
+		{"a", []string{"a_", "a_"}},
 		{"ab", []string{"ab"}},
 	}
 
@@ -61,10 +60,20 @@ func TestLookup(t *testing.T) {
 func TestLookupPartial(t *testing.T) {
 	fb, _ := bank.New(strings.NewReader(macrons))
 
-	results := fb.LookupPartial("ab")
-	if diff := cmp.Diff([]string{"ab"}, results); diff != "" {
-		t.Errorf("Lookup failure:\n%s", diff)
+	tests := []struct {
+		query    string
+		expected []string
+	}{
+		{"ab", []string{"ab", "abs"}},
+		{"ad", []string{"ad", "addo_", "adve^nio_"}},
 	}
 
-	t.Log(fb.String())
+	for _, test := range tests {
+		forms := fb.LookupPartial(test.query)
+		accented := extractAccented(forms)
+
+		if diff := cmp.Diff(test.expected, accented); diff != "" {
+			t.Errorf("Wrong partial lookup results:\n%s", diff)
+		}
+	}
 }
