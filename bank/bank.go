@@ -3,6 +3,7 @@ package bank
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -25,7 +26,7 @@ func New(r io.Reader) (*FormBank, error) {
 
 	for scanner.Scan() {
 		l := scanner.Text()
-		if l == "" {
+		if l == "" || strings.HasPrefix("#", l) {
 			continue
 		}
 		cols := strings.Split(l, "\t")
@@ -48,7 +49,11 @@ func (fb *FormBank) String() string {
 func (fb *FormBank) addForm(lookup string, form WordForm) {
 	n := &fb.root
 	for _, c := range lookup {
-		i := c - 'a'
+		i := int(c - 'a')
+		if i < 0 || i >= alphabetSize {
+			fmt.Printf("%s - %s\n", lookup, string(c))
+			return
+		}
 		if n.nodes[i] == nil {
 			n.nodes[i] = new(node)
 		}
