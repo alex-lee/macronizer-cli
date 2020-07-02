@@ -1,7 +1,10 @@
 .PHONY: build test
 
-build:
-	go build -o mzcli .
+build: binclude.go
+	go build -o mzcli ./cmd/mzcli
 
 test:
 	go test ./...
+
+binclude.go: assets/macrons.txt
+	go generate

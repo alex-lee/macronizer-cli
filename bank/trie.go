@@ -3,6 +3,8 @@ package bank
 import (
 	"fmt"
 	"strings"
+
+	mzcli "collat.io/macronizer-cli"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -10,7 +12,7 @@ const alphabetSize = len(alphabet)
 
 type node struct {
 	nodes [alphabetSize]*node
-	forms []WordForm
+	forms []mzcli.Form
 }
 
 func (n *node) String() string {
@@ -29,17 +31,21 @@ func (n *node) String() string {
 	return strings.Join(lines, "\n")
 }
 
-func (n *node) ExactForms() []WordForm {
+func (n *node) ExactForms() []mzcli.Form {
 	return n.forms
 }
 
-func (n *node) Forms() []WordForm {
-	forms := make([]WordForm, len(n.forms))
+func (n *node) Forms(limit int) []mzcli.Form {
+	forms := make([]mzcli.Form, len(n.forms))
 	copy(forms, n.forms)
+	if len(forms) > limit {
+		return forms
+	}
 
 	for _, child := range n.nodes {
 		if child != nil {
-			forms = append(forms, child.Forms()...)
+			childForms := child.Forms(limit - len(forms))
+			forms = append(forms, childForms...)
 		}
 	}
 

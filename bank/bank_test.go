@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	mzcli "collat.io/macronizer-cli"
 	"collat.io/macronizer-cli/bank"
 )
 
@@ -21,7 +22,7 @@ addo	v1spia---	addo	addo_
 advenio	v1spia---	advenio	adve^nio_
 `
 
-func extractAccented(forms []bank.WordForm) []string {
+func extractAccented(forms []mzcli.Form) []string {
 	accented := make([]string, 0, len(forms))
 	for _, f := range forms {
 		accented = append(accented, f.Accented)
@@ -48,7 +49,7 @@ func TestLookup(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		forms := fb.Lookup(test.query)
+		forms := fb.Find(test.query)
 		accented := extractAccented(forms)
 
 		if diff := cmp.Diff(test.expected, accented); diff != "" {
@@ -69,7 +70,7 @@ func TestLookupPartial(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		forms := fb.LookupPartial(test.query)
+		forms := fb.FindPartial(test.query)
 		accented := extractAccented(forms)
 
 		if diff := cmp.Diff(test.expected, accented); diff != "" {
