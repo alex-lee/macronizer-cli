@@ -1,3 +1,10 @@
 /README.html
-/binclude.go
 /mzcli
+
+# Resources
+/assets/macrons_packed.txt
+/cmd/mzcli/binclude.go
+
+# Profiling
+/cpu.prof
+/mem.prof

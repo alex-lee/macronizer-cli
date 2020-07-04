@@ -1,10 +1,7 @@
 package bank
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	mzcli "collat.io/macronizer-cli"
@@ -15,35 +12,13 @@ type FormBank struct {
 	root node
 }
 
-func New(r io.Reader) (*FormBank, error) {
-	bank := &FormBank{}
-	scanner := bufio.NewScanner(r)
-
-	for scanner.Scan() {
-		l := scanner.Text()
-		if l == "" || strings.HasPrefix("#", l) {
-			continue
-		}
-		cols := strings.Split(l, "\t")
-		if len(cols) != 4 {
-			return nil, errors.New("could not parse input")
-		}
-		bank.addForm(cols[0], mzcli.Form{
-			Accented: cols[3],
-			MorphTag: cols[1],
-		})
-	}
-
-	return bank, nil
-}
-
 func (fb *FormBank) String() string {
 	return fb.root.String()
 }
 
-func (fb *FormBank) addForm(lookup string, form mzcli.Form) {
+func (fb *FormBank) AddForm(lookup string, form mzcli.Form) {
 	n := &fb.root
-	for _, c := range lookup {
+	for _, c := range strings.ToLower(lookup) {
 		i := int(c - 'a')
 		if i < 0 || i >= alphabetSize {
 			fmt.Printf("%s - %s\n", lookup, string(c))
