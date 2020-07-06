@@ -1,3 +1,4 @@
+// Pre-process the macrons data, to make it more compact.
 package main
 
 import (

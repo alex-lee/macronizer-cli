@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// lookupTable maps strings to ints, and vice versa.
 type lookupTable struct {
 	cur     int
 	toInt   map[string]int
