@@ -1,6 +1,7 @@
 package bank_test
 
 import (
+	"bufio"
 	"strings"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 
 	mzcli "collat.io/macronizer-cli"
 	"collat.io/macronizer-cli/bank"
+	"collat.io/macronizer-cli/compact"
 )
 
 const macrons = `
@@ -22,6 +24,40 @@ addo	v1spia---	addo	addo_
 advenio	v1spia---	advenio	adve^nio_
 `
 
+func testForms(t *testing.T) []compact.PackedEntry {
+	var entries []compact.PackedEntry
+
+	scanner := bufio.NewScanner(strings.NewReader(macrons))
+	for scanner.Scan() {
+		l := scanner.Text()
+		if l == "" {
+			continue
+		}
+		cols := strings.Split(l, "\t")
+		if len(cols) != 4 {
+			t.Fatalf("macrons test data is invalid")
+		}
+		entries = append(entries, compact.PackedEntry{
+			Bare: cols[0],
+			Form: mzcli.Form{
+				Accented: cols[3],
+				Lemma:    cols[2],
+				MorphTag: cols[1],
+			},
+		})
+	}
+
+	return entries
+}
+
+func testFormBank(t *testing.T) bank.FormBank {
+	b := bank.FormBank{}
+	for _, pe := range testForms(t) {
+		b.AddForm(pe.Bare, pe.Form)
+	}
+	return b
+}
+
 func extractAccented(forms []mzcli.Form) []string {
 	accented := make([]string, 0, len(forms))
 	for _, f := range forms {
@@ -30,15 +66,8 @@ func extractAccented(forms []mzcli.Form) []string {
 	return accented
 }
 
-func TestNew(t *testing.T) {
-	_, err := bank.New(strings.NewReader(macrons))
-	if err != nil {
-		t.Errorf("failed to create: %v", err)
-	}
-}
-
 func TestLookup(t *testing.T) {
-	fb, _ := bank.New(strings.NewReader(macrons))
+	fb := testFormBank(t)
 
 	tests := []struct {
 		query    string
@@ -59,7 +88,7 @@ func TestLookup(t *testing.T) {
 }
 
 func TestLookupPartial(t *testing.T) {
-	fb, _ := bank.New(strings.NewReader(macrons))
+	fb := testFormBank(t)
 
 	tests := []struct {
 		query    string
