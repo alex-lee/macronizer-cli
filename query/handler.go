@@ -7,13 +7,19 @@ import (
 	mzcli "collat.io/macronizer-cli"
 )
 
+// FormFinder looks for word forms.
+type FormFinder interface {
+	Find(s string) []mzcli.Form
+	FindPartial(s string) []mzcli.Form
+}
+
 // Handler interprets input and looks up form matches.
 type Handler struct {
-	finder mzcli.FormFinder
+	finder FormFinder
 }
 
 // NewHandler returns a new handler based on the given form finder.
-func NewHandler(finder mzcli.FormFinder) *Handler {
+func NewHandler(finder FormFinder) *Handler {
 	return &Handler{
 		finder: finder,
 	}

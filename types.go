@@ -7,9 +7,3 @@ type Form struct {
 	Lemma    string
 	MorphTag string
 }
-
-// FormFinder looks for word forms.
-type FormFinder interface {
-	Find(s string) []Form
-	FindPartial(s string) []Form
-}
