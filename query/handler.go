@@ -43,7 +43,7 @@ func (h *Handler) Handle(input string) {
 
 	// Print out the results.
 	for _, m := range forms {
-		fmt.Printf(format, m.Accented, m.MorphTag)
+		fmt.Printf(format, prettify(m.Accented), m.MorphTag)
 	}
 }
 
