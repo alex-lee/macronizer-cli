@@ -18,18 +18,38 @@ func completer(doc prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
 }
 
-func loadFormBank(profile bool) *bank.FormBank {
-	if profile {
-		cpuProf, err := os.Create("cpu.prof")
+func startProfile() func() {
+	cpuProf, err := os.Create("cpu.prof")
+	if err != nil {
+		panic(err)
+	}
+
+	if err := pprof.StartCPUProfile(cpuProf); err != nil {
+		panic(err)
+	}
+
+	return func() {
+		memProf, err := os.Create("mem.prof")
 		if err != nil {
 			panic(err)
 		}
-		defer cpuProf.Close()
 
-		if err := pprof.StartCPUProfile(cpuProf); err != nil {
+		runtime.GC()
+		if err := pprof.WriteHeapProfile(memProf); err != nil {
 			panic(err)
 		}
-		defer pprof.StopCPUProfile()
+
+		memProf.Close()
+
+		pprof.StopCPUProfile()
+		cpuProf.Close()
+	}
+}
+
+func loadFormBank(profile bool) *bank.FormBank {
+	if profile {
+		cleanup := startProfile()
+		defer cleanup()
 	}
 
 	f, err := macronsData()
@@ -52,19 +72,6 @@ func loadFormBank(profile bool) *bank.FormBank {
 
 	for _, pe := range packedEntries {
 		b.AddForm(pe.Bare, pe.Form)
-	}
-
-	if profile {
-		memProf, err := os.Create("mem.prof")
-		if err != nil {
-			panic(err)
-		}
-		defer memProf.Close()
-
-		runtime.GC()
-		if err := pprof.WriteHeapProfile(memProf); err != nil {
-			panic(err)
-		}
 	}
 
 	return b
