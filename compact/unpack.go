@@ -98,6 +98,13 @@ func Unpack(src io.Reader) ([]PackedEntry, error) {
 	return packedEntries, nil
 }
 
+func copyString(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	return s[0:1] + s[1:]
+}
+
 func parseTableEntry(l string) (index int, value string, err error) {
 	cols := strings.Split(l, "\t")
 	if len(cols) != 2 {
@@ -111,7 +118,7 @@ func parseTableEntry(l string) (index int, value string, err error) {
 		return
 	}
 
-	value = cols[1]
+	value = copyString(cols[1])
 	return
 }
 
@@ -130,8 +137,8 @@ func parseFormEntry(l string) (entry, error) {
 		return entry{}, &ParseError{"invalid lemma index", err}
 	}
 
-	accented := cols[3]
-	bare := cols[0]
+	accented := copyString(cols[3])
+	bare := copyString(cols[0])
 	if bare == "" {
 		bare = stripAccents(accented)
 	}
