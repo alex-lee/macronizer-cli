@@ -7,20 +7,39 @@ import (
 	"collat.io/macronizer-cli/compact"
 )
 
+const (
+	macronsFile   = "./assets/macrons.txt"
+	lemmasFile    = "./assets/packed_lemmas.txt"
+	morphTagsFile = "./assets/packed_morphtags.txt"
+	entriesFile   = "./assets/packed_entries.txt"
+)
+
 func main() {
-	src, err := os.Open("./assets/macrons.txt")
+	src, err := os.Open(macronsFile)
 	if err != nil {
 		panic(err)
 	}
 	defer src.Close()
 
-	dst, err := os.Create(os.Args[1])
+	dstLemmas, err := os.Create(lemmasFile)
 	if err != nil {
 		panic(err)
 	}
-	defer dst.Close()
+	defer dstLemmas.Close()
 
-	err = compact.Pack(dst, src)
+	dstMorphTags, err := os.Create(morphTagsFile)
+	if err != nil {
+		panic(err)
+	}
+	defer dstMorphTags.Close()
+
+	dstEntries, err := os.Create(entriesFile)
+	if err != nil {
+		panic(err)
+	}
+	defer dstEntries.Close()
+
+	err = compact.Pack(dstLemmas, dstMorphTags, dstEntries, src)
 	if err != nil {
 		panic(err)
 	}
