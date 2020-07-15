@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-const (
-	packedDividerLemmas    = "# lemmas"
-	packedDividerMorphTags = "# morphTags"
-	packedDividerEntries   = "# entries"
-)
-
 // entry is a single row in the macrons file.
 type entry struct {
 	Bare     string
@@ -29,8 +23,7 @@ type payload struct {
 	Lemmas    map[int]string
 }
 
-func Pack(dst io.Writer, src io.Reader) error {
-	w := bufio.NewWriter(dst)
+func Pack(dstLemmas io.Writer, dstMorphTags io.Writer, dstEntries io.Writer, src io.Reader) error {
 	morphTags := newLookupTable()
 	lemmas := newLookupTable()
 	var entries []entry
@@ -70,21 +63,20 @@ func Pack(dst io.Writer, src io.Reader) error {
 	}
 
 	// Write the tables
-	w.WriteString(packedDividerLemmas + "\n")
-	lemmas.write(w)
-	w.WriteString(packedDividerMorphTags + "\n")
-	morphTags.write(w)
+	lemmas.write(bufio.NewWriter(dstLemmas))
+	morphTags.write(bufio.NewWriter(dstMorphTags))
 
 	// Write the entries.
-	w.WriteString(packedDividerEntries + "\n")
+	w := bufio.NewWriter(dstEntries)
 	for _, e := range entries {
 		line := fmt.Sprintf("%s\t%d\t%d\t%s\n", e.Bare, e.MorphTag, e.Lemma, e.Accented)
 		w.WriteString(line)
 	}
+	w.Flush()
 
-	fmt.Printf("Recorded %d entries\n", len(entries))
-	fmt.Printf("Recorded %d morph tags\n", morphTags.size())
 	fmt.Printf("Recorded %d lemmas\n", lemmas.size())
+	fmt.Printf("Recorded %d morph tags\n", morphTags.size())
+	fmt.Printf("Recorded %d entries\n", len(entries))
 
 	return nil
 }

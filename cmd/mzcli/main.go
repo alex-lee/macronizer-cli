@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"flag"
 	"os"
 	"runtime"
@@ -52,25 +51,19 @@ func loadFormBank(profile bool) *bank.FormBank {
 		defer cleanup()
 	}
 
-	f, err := macronsData()
+	lemmasData, morphTagsData, entriesData, cleanup, err := loadData()
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer cleanup()
 
-	r, err := gzip.NewReader(f)
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-
-	b := &bank.FormBank{}
-	packedEntries, err := compact.Unpack(r)
+	b := bank.New()
+	entriesChan, err := compact.Unpack(lemmasData, morphTagsData, entriesData)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, pe := range packedEntries {
+	for pe := range entriesChan {
 		b.AddForm(pe.Bare, pe.Form)
 	}
 

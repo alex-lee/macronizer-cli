@@ -38,7 +38,9 @@ func (t *lookupTable) size() int {
 }
 
 func (t *lookupTable) write(w *bufio.Writer) {
+	w.WriteString(fmt.Sprintf("%d\n", t.size()))
 	for k, v := range t.fromInt {
 		w.WriteString(fmt.Sprintf("%d\t%s\n", k, v))
 	}
+	w.Flush()
 }

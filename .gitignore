@@ -2,7 +2,7 @@
 /mzcli
 
 # Resources
-/assets/macrons_packed.txt
+/assets/packed_*.txt
 /cmd/mzcli/binclude.go
 
 # Profiling

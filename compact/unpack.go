@@ -2,6 +2,7 @@ package compact
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -27,75 +28,102 @@ type PackedEntry struct {
 	Form mzcli.Form
 }
 
-func Unpack(src io.Reader) ([]PackedEntry, error) {
-	var packedEntries []PackedEntry
-	lemmas := make(map[int]string)
-	morphTags := make(map[int]string)
+func Unpack(
+	lemmasData io.Reader,
+	morphTagsData io.Reader,
+	entriesData io.Reader,
+) (<-chan PackedEntry, error) {
+	lemmas, err := loadLemmas(lemmasData)
+	if err != nil {
+		return nil, err
+	}
+
+	morphTags, err := loadMorphTags(morphTagsData)
+	if err != nil {
+		return nil, err
+	}
+
+	entriesChan := make(chan PackedEntry)
+
+	// Parse entries incrementally.
+	go func() {
+		var l string
+		scanner := bufio.NewScanner(entriesData)
+
+		for scanner.Scan() {
+			l = scanner.Text()
+
+			entry, err := parseFormEntry(l)
+			if err != nil {
+				fmt.Println(&ParseError{"invalid entry", err}) // TODO clean up
+				return
+			}
+
+			form := mzcli.Form{
+				Accented: entry.Accented,
+				Lemma:    lemmas[entry.Lemma],
+				MorphTag: morphTags[entry.MorphTag],
+			}
+			entriesChan <- PackedEntry{entry.Bare, form}
+		}
+
+		fmt.Println("Done loading entries.")
+		close(entriesChan)
+	}()
+
+	return entriesChan, nil
+}
+
+func loadLemmas(src io.Reader) ([]string, error) {
+	var lemmas []string
 
 	scanner := bufio.NewScanner(src)
 
-	// Parse lemmas.
 	if ok := scanner.Scan(); !ok {
-		return nil, &ParseError{"empty data", nil}
+		return nil, &ParseError{"empty lemmas data", nil}
 	}
-	if l := scanner.Text(); l != packedDividerLemmas {
-		return nil, &ParseError{"lemma section not found", nil}
+	l := scanner.Text()
+	numLemmas, err := strconv.Atoi(l)
+	if err != nil {
+		return nil, &ParseError{"could not determine lemma count", err}
 	}
-	for scanner.Scan() {
-		l := scanner.Text()
-		if l == packedDividerMorphTags {
-			break
-		}
+	lemmas = make([]string, numLemmas)
 
+	for scanner.Scan() {
+		l = scanner.Text()
 		index, lemma, err := parseTableEntry(l)
 		if err != nil {
 			return nil, &ParseError{"invalid lemma", err}
 		}
 		lemmas[index] = lemma
 	}
+	return lemmas, nil
+}
 
-	// Parse morphTags.
+func loadMorphTags(src io.Reader) ([]string, error) {
+	var morphTags []string
+
+	scanner := bufio.NewScanner(src)
+
+	if ok := scanner.Scan(); !ok {
+		return nil, &ParseError{"empty lemmas data", nil}
+	}
+	l := scanner.Text()
+	numMorphTags, err := strconv.Atoi(l)
+	if err != nil {
+		return nil, &ParseError{"could not determine lemma count", err}
+	}
+	morphTags = make([]string, numMorphTags)
+
 	for scanner.Scan() {
-		l := scanner.Text()
-		if l == packedDividerEntries {
-			break
-		}
-
+		l = scanner.Text()
 		index, morphTag, err := parseTableEntry(l)
 		if err != nil {
 			return nil, &ParseError{"invalid morphTag", err}
 		}
 		morphTags[index] = morphTag
 	}
-
-	// Parse entries.
-	for scanner.Scan() {
-		l := scanner.Text()
-
-		entry, err := parseFormEntry(l)
-		if err != nil {
-			return nil, &ParseError{"invalid entry", err}
-		}
-
-		morphTag, ok := morphTags[entry.MorphTag]
-		if !ok {
-			return nil, &ParseError{"missing morph tag", nil}
-		}
-		lemma, ok := lemmas[entry.Lemma]
-		if !ok {
-			return nil, &ParseError{"missing lemma", nil}
-		}
-
-		form := mzcli.Form{
-			Accented: entry.Accented,
-			Lemma:    lemma,
-			MorphTag: morphTag,
-		}
-
-		packedEntries = append(packedEntries, PackedEntry{entry.Bare, form})
-	}
-
-	return packedEntries, nil
+	return morphTags, nil
 }
 
 func copyString(s string) string {
