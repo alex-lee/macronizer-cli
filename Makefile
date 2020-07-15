@@ -3,9 +3,9 @@ macrons_source := assets/macrons.txt
 packed_data := assets/packed_lemmas.txt assets/packed_morphtags.txt assets/packed_entries.txt
 binary := mzcli
 
-.PHONY: build test
+.PHONY: build clean test binclude
 
-build: $(binclude_data)
+build: binclude
 	go build -o $(binary) ./cmd/mzcli
 
 clean:
@@ -16,8 +16,10 @@ clean:
 test:
 	go test ./...
 
-$(packed_data): $(macrons_source)
-	go run ./cmd/dataprep $(packed_data)
+binclude: $(binclude_data)
 
 $(binclude_data): $(packed_data)
 	go generate ./cmd/mzcli
+
+$(packed_data): $(macrons_source)
+	go run ./cmd/dataprep $(packed_data)

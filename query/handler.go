@@ -39,7 +39,7 @@ func (h *Handler) Handle(input string) {
 
 	// Figure out how much padding we need for clean alignment.
 	padding := maxAccentedLength(forms) + 1
-	format := fmt.Sprintf("%%-%ds %%s\n", padding)
+	format := fmt.Sprintf("%%-%ds %%s\n", padding) // Becomes, e.g.: "%-23s %s"
 
 	// Print out the results.
 	for _, m := range forms {
