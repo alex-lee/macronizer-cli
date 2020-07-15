@@ -50,8 +50,8 @@ func testForms(t *testing.T) []compact.PackedEntry {
 	return entries
 }
 
-func testFormBank(t *testing.T) bank.FormBank {
-	b := bank.FormBank{}
+func testFormBank(t *testing.T) *bank.FormBank {
+	b := bank.New()
 	for _, pe := range testForms(t) {
 		b.AddForm(pe.Bare, pe.Form)
 	}

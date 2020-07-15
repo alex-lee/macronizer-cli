@@ -9,7 +9,13 @@ import (
 
 // FormBank tracks word forms.
 type FormBank struct {
-	root node
+	root *node
+}
+
+func New() *FormBank {
+	return &FormBank{
+		root: newNode(),
+	}
 }
 
 func (fb *FormBank) String() string {
@@ -17,15 +23,16 @@ func (fb *FormBank) String() string {
 }
 
 func (fb *FormBank) AddForm(lookup string, form mzcli.Form) {
-	n := &fb.root
+	n := fb.root
 	for _, c := range strings.ToLower(lookup) {
-		i := int(c - 'a')
-		if i < 0 || i >= alphabetSize {
+		i := int8(c - 'a')
+		if i < 0 || i >= int8(alphabetSize) {
+			// TODO better reporting
 			fmt.Printf("%s - %s\n", lookup, string(c))
 			return
 		}
-		if n.nodes[i] == nil {
-			n.nodes[i] = new(node)
+		if _, ok := n.nodes[i]; !ok {
+			n.nodes[i] = newNode()
 		}
 		n = n.nodes[i]
 	}
@@ -33,13 +40,13 @@ func (fb *FormBank) AddForm(lookup string, form mzcli.Form) {
 }
 
 func (fb *FormBank) findNode(lookup string) *node {
-	n := &fb.root
+	n := fb.root
 	for _, c := range lookup {
-		i := int(c - 'a')
-		if i < 0 || i >= alphabetSize {
+		i := int8(c - 'a')
+		if i < 0 || i >= int8(alphabetSize) {
 			return nil
 		}
-		if n.nodes[i] == nil {
+		if _, ok := n.nodes[i]; !ok {
 			return nil
 		}
 		n = n.nodes[i]

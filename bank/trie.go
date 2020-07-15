@@ -11,8 +11,14 @@ const alphabet = "abcdefghijklmnopqrstuvwxyz"
 const alphabetSize = len(alphabet)
 
 type node struct {
-	nodes [alphabetSize]*node
+	nodes map[int8]*node
 	forms []mzcli.Form
+}
+
+func newNode() *node {
+	return &node{
+		nodes: make(map[int8]*node),
+	}
 }
 
 func (n *node) String() string {
@@ -23,9 +29,7 @@ func (n *node) String() string {
 		lines = append(lines, row)
 	}
 	for _, child := range n.nodes {
-		if child != nil {
-			lines = append(lines, child.String())
-		}
+		lines = append(lines, child.String())
 	}
 
 	return strings.Join(lines, "\n")
@@ -43,10 +47,8 @@ func (n *node) Forms(limit int) []mzcli.Form {
 	}
 
 	for _, child := range n.nodes {
-		if child != nil {
-			childForms := child.Forms(limit - len(forms))
-			forms = append(forms, childForms...)
-		}
+		childForms := child.Forms(limit - len(forms))
+		forms = append(forms, childForms...)
 	}
 
 	return forms

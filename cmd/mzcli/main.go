@@ -57,7 +57,7 @@ func loadFormBank(profile bool) *bank.FormBank {
 	}
 	defer cleanup()
 
-	b := &bank.FormBank{}
+	b := bank.New()
 	entriesChan, err := compact.Unpack(lemmasData, morphTagsData, entriesData)
 	if err != nil {
 		panic(err)
