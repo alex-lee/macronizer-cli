@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"os"
 	"runtime"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 
+	"collat.io/macronizer-cli/assets"
 	"collat.io/macronizer-cli/bank"
 	"collat.io/macronizer-cli/compact"
 	"collat.io/macronizer-cli/query"
@@ -51,11 +53,9 @@ func loadFormBank(profile bool) *bank.FormBank {
 		defer cleanup()
 	}
 
-	lemmasData, morphTagsData, entriesData, cleanup, err := loadData()
-	if err != nil {
-		panic(err)
-	}
-	defer cleanup()
+	lemmasData := bytes.NewReader(assets.LemmasData)
+	morphTagsData := bytes.NewReader(assets.MorphTagsData)
+	entriesData := bytes.NewReader(assets.EntriesData)
 
 	b := bank.New()
 	entriesChan, err := compact.Unpack(lemmasData, morphTagsData, entriesData)
