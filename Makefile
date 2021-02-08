@@ -2,7 +2,8 @@
 
 binary := mzcli
 macrons_source := assets/macrons.txt
-packed_sources := assets/packed_lemmas.txt assets/packed_morphtags.txt assets/packed_entries.txt
+data_files := lemmas morphtags entries
+packed_sources := $(patsubst %,assets/packed_%.txt.gz,$(data_files))
 
 # Build rules
 
@@ -20,7 +21,7 @@ test:
 	go test ./...
 
 $(packed_sources): $(macrons_source)
-	go run ./cmd/dataprep $(packed_sources)
+	go run ./cmd/dataprep
 
 # Release rules
 

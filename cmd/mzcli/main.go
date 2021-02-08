@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"flag"
 	"os"
 	"runtime"
@@ -47,15 +48,27 @@ func startProfile() func() {
 	}
 }
 
+func loadGzippedData(data []byte) *gzip.Reader {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 func loadFormBank(profile bool) *bank.FormBank {
 	if profile {
 		cleanup := startProfile()
 		defer cleanup()
 	}
 
-	lemmasData := bytes.NewReader(assets.LemmasData)
-	morphTagsData := bytes.NewReader(assets.MorphTagsData)
-	entriesData := bytes.NewReader(assets.EntriesData)
+	// The embedded data is known, so these should never panic.
+	lemmasData := loadGzippedData(assets.LemmasData)
+	defer lemmasData.Close()
+	morphTagsData := loadGzippedData(assets.MorphTagsData)
+	defer morphTagsData.Close()
+	entriesData := loadGzippedData(assets.EntriesData)
+	defer entriesData.Close()
 
 	b := bank.New()
 	entriesChan, err := compact.Unpack(lemmasData, morphTagsData, entriesData)
