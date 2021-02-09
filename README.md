@@ -17,11 +17,7 @@ Note that there is a limit to the number of entries returned for any given query
 
 ## Development
 
-You will need to have [binclude] installed.
-
 Run `make` to build the `mzcli` command.
 
 The macrons data is first pre-processed to put it in more compact form. Then it is included as a
 static, gzipped resource in the compiled binary. See the `Makefile` for details.
-
-[binclude]: https://github.com/lu4p/binclude

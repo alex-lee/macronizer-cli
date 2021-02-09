@@ -1,32 +1,27 @@
 # Makefile for macronizer-cli
 
 binary := mzcli
-binclude_source := cmd/mzcli/binclude.go
 macrons_source := assets/macrons.txt
-packed_sources := assets/packed_lemmas.txt assets/packed_morphtags.txt assets/packed_entries.txt
-
-.PHONY: build clean test binclude
+data_files := lemmas morphtags entries
+packed_sources := $(patsubst %,assets/packed_%.txt.gz,$(data_files))
 
 # Build rules
 
-build: binclude
+.PHONY: build
+build: $(packed_sources)
 	go build -o $(binary) ./cmd/mzcli
 
+.PHONY: clean
 clean:
 	-rm $(packed_sources)
-	-rm $(binclude_source)
 	-rm $(binary)
 
+.PHONY: test
 test:
 	go test ./...
 
-binclude: $(binclude_source)
-
-$(binclude_source): $(packed_sources)
-	go generate ./cmd/mzcli
-
 $(packed_sources): $(macrons_source)
-	go run ./cmd/dataprep $(packed_sources)
+	go run ./cmd/dataprep
 
 # Release rules
 

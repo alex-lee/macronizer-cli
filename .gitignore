@@ -4,7 +4,6 @@
 
 # Resources
 /assets/packed_*.txt
-/cmd/mzcli/binclude.go
 
 # Profiling
 /cpu.prof

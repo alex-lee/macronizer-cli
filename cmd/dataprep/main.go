@@ -2,6 +2,8 @@
 package main
 
 import (
+	"compress/gzip"
+	"io"
 	"os"
 
 	"collat.io/macronizer-cli/compact"
@@ -9,10 +11,38 @@ import (
 
 const (
 	macronsFile   = "./assets/macrons.txt"
-	lemmasFile    = "./assets/packed_lemmas.txt"
-	morphTagsFile = "./assets/packed_morphtags.txt"
-	entriesFile   = "./assets/packed_entries.txt"
+	lemmasFile    = "./assets/packed_lemmas.txt.gz"
+	morphTagsFile = "./assets/packed_morphtags.txt.gz"
+	entriesFile   = "./assets/packed_entries.txt.gz"
 )
+
+type dataFile struct {
+	f *os.File
+	w io.WriteCloser
+}
+
+func (df *dataFile) Write(p []byte) (n int, err error) {
+	return df.w.Write(p)
+}
+
+func (df *dataFile) Close() error {
+	if err := df.w.Close(); err != nil {
+		return err
+	}
+	if err := df.f.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func createDataFile(path string) *dataFile {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	w := gzip.NewWriter(f)
+	return &dataFile{f, w}
+}
 
 func main() {
 	src, err := os.Open(macronsFile)
@@ -21,22 +51,13 @@ func main() {
 	}
 	defer src.Close()
 
-	dstLemmas, err := os.Create(lemmasFile)
-	if err != nil {
-		panic(err)
-	}
+	dstLemmas := createDataFile(lemmasFile)
 	defer dstLemmas.Close()
 
-	dstMorphTags, err := os.Create(morphTagsFile)
-	if err != nil {
-		panic(err)
-	}
+	dstMorphTags := createDataFile(morphTagsFile)
 	defer dstMorphTags.Close()
 
-	dstEntries, err := os.Create(entriesFile)
-	if err != nil {
-		panic(err)
-	}
+	dstEntries := createDataFile(entriesFile)
 	defer dstEntries.Close()
 
 	err = compact.Pack(dstLemmas, dstMorphTags, dstEntries, src)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"flag"
 	"os"
 	"runtime"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/c-bata/go-prompt"
 
+	"collat.io/macronizer-cli/assets"
 	"collat.io/macronizer-cli/bank"
 	"collat.io/macronizer-cli/compact"
 	"collat.io/macronizer-cli/query"
@@ -45,17 +48,27 @@ func startProfile() func() {
 	}
 }
 
+func loadGzippedData(data []byte) *gzip.Reader {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 func loadFormBank(profile bool) *bank.FormBank {
 	if profile {
 		cleanup := startProfile()
 		defer cleanup()
 	}
 
-	lemmasData, morphTagsData, entriesData, cleanup, err := loadData()
-	if err != nil {
-		panic(err)
-	}
-	defer cleanup()
+	// The embedded data is known, so these should never panic.
+	lemmasData := loadGzippedData(assets.LemmasData)
+	defer lemmasData.Close()
+	morphTagsData := loadGzippedData(assets.MorphTagsData)
+	defer morphTagsData.Close()
+	entriesData := loadGzippedData(assets.EntriesData)
+	defer entriesData.Close()
 
 	b := bank.New()
 	entriesChan, err := compact.Unpack(lemmasData, morphTagsData, entriesData)
