@@ -8,8 +8,14 @@ packed_sources := $(patsubst %,assets/packed_%.txt.gz,$(data_files))
 # Build rules
 
 .PHONY: build
-build: $(packed_sources)
+build: packed-data
 	go build -o $(binary) ./cmd/mzcli
+
+.PHONY: packed-data
+packed-data: $(packed_sources)
+
+$(packed_sources): $(macrons_source)
+	go run ./cmd/dataprep
 
 .PHONY: clean
 clean:
@@ -20,10 +26,8 @@ clean:
 test:
 	go test ./...
 
-$(packed_sources): $(macrons_source)
-	go run ./cmd/dataprep
-
 # Release rules
 
+.PHONY: dist-test
 dist-test:
 	goreleaser --snapshot --skip-publish --rm-dist

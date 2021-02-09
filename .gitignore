@@ -3,7 +3,7 @@
 /mzcli
 
 # Resources
-/assets/packed_*.txt
+/assets/packed_*.txt.gz
 
 # Profiling
 /cpu.prof
